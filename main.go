@@ -1,44 +1,23 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
-	"os"
-	"strconv"
+	"log"
 
-	portalcheck "portalcheck/src"
+	"portalcheck/session"
+	"portalcheck/ui"
+
+	"github.com/jroimartin/gocui"
 )
 
-type User struct {
-	credentials portalcheck.Credentials
-}
-
-var user User
-
 func main() {
-	credentials := request_credentials()
-	user := User{credentials}
-}
-
-func request_credentials() portalcheck.Credentials {
-	var identifier portalcheck.Identifier
-
-	reader := bufio.NewReader(os.Stdin)
-
-	for {
-		fmt.Println("Student Identifer")
-		id, _ := reader.ReadString('\n')
-		id2, ok := strconv.Atoi(id)
-
-		if ok != nil {
-			fmt.Println("Invalid Identifier")
-			continue
-		}
-		identifier = portalcheck.Identifier(id2)
-		break
+	g, err := gocui.NewGui(gocui.OutputNormal)
+	if err != nil {
+		log.Panicln(err)
 	}
+	defer g.Close()
 
-	password, _ := reader.ReadString('\n')
+	// create session
+	session.UserSession = session.Session{LoggedIn: false}
 
-	return portalcheck.Credentials{Identifier: identifier, Password: password}
+	ui.StartGUI(g)
 }
