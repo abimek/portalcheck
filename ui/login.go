@@ -3,16 +3,18 @@ package ui
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"portalcheck/session"
+	"portalcheck/studentvue"
 
 	"github.com/jroimartin/gocui"
 )
 
 type LoginInfo struct {
-	portal   string
-	id       int
-	password string
+	Portal   string
+	Id       int
+	Password string
 }
 
 const (
@@ -150,9 +152,9 @@ func keyEnterLogin(gui *gocui.Gui, view *gocui.View) error {
 				createStatus(StatusInfo{"you have an empty section", 3, gui})
 				return nil
 			}
-			logininfo[i] = v.Buffer()
+			// we have to trim off the suffix
+			logininfo[i] = strings.TrimSuffix(v.Buffer(), "\n")
 		}
-
 		// we check to see if the id is an int and if not we delete the ID field
 		id, err := strconv.Atoi(logininfo[1])
 		if err != nil {
@@ -164,13 +166,21 @@ func keyEnterLogin(gui *gocui.Gui, view *gocui.View) error {
 			createStatus(StatusInfo{"You're ID is not a number", 4, gui})
 			return nil
 		}
-		loggin(LoginInfo{portal: logininfo[0], id: id, password: logininfo[2]})
+		login(LoginInfo{Portal: logininfo[0], Id: id, Password: logininfo[2]}, gui)
 	}
 	return nil
 }
 
 // This method is called once the login menu is submitted, one the data is valid
-func loggin(LoginInfo) {
+func login(loginInfo LoginInfo, gui *gocui.Gui) {
+	err := studentvue.CreateClient(loginInfo.Portal, loginInfo.Id, loginInfo.Password)
+	if err != nil {
+		createStatus(StatusInfo{"Failed to log in", 3, gui})
+		return
+	}
+	deleteLoginLayout(gui)
+
+	// TODO: Send To Main Menu
 }
 
 // DELETE ALL THE LOGIN UI's
