@@ -3,9 +3,6 @@ package main
 import (
 	"log"
 
-	"portalcheck/session"
-	"portalcheck/ui"
-
 	"github.com/jroimartin/gocui"
 )
 
@@ -17,7 +14,7 @@ func main() {
 	defer g.Close()
 
 	// create session
-	session.UserSession = session.Session{LoggedIn: false}
+	userSession = session{LoggedIn: false, currentMarkingPeriod: 0}
 
-	ui.StartGUI(g)
+	startGUI(g)
 }
