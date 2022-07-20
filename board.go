@@ -19,24 +19,7 @@ func boardLayout(gui *gocui.Gui) error {
 	}
 	maxX, maxY := gui.Size()
 
-	if v, err := gui.SetView(boardSessionInfoView, 1, 1, maxX/7, maxY/8); err != nil {
-		if err != gocui.ErrUnknownView {
-			return nil
-		}
-		v.Title = "Session Info"
-
-		// we print the Session Info
-		id := studentInfo.PermID
-		name := studentInfo.FormattedName
-		grade := studentInfo.Grade
-		homeroom := studentInfo.HomeRoom
-		school := studentInfo.CurrentSchool
-		fmt.Fprintln(v, "\u001b[31;1mName: \u001b[34m"+name)
-		fmt.Fprintln(v, "\u001b[31;1mID: \u001b[34m"+strconv.Itoa(id))
-		fmt.Fprintln(v, "\u001b[31;1mGRADE: \u001b[34m"+strconv.Itoa(int(grade)))
-		fmt.Fprintln(v, "\u001b[31;1mHome Room: \u001b[34m"+homeroom)
-		fmt.Fprintln(v, "\u001b[31;1mSCHOOL: \u001b[34m"+school+"\u001b[32m")
-	}
+	boardSessionInfoWidget(gui, maxX, maxY)
 	if v, err := gui.SetView(boardMarkingPeriodsView, 1, maxY/8+1, maxX/7, maxY/4); err != nil {
 		if err != gocui.ErrUnknownView {
 			return nil
@@ -62,6 +45,28 @@ func boardLayout(gui *gocui.Gui) error {
 	if firstBoardRun {
 		firstBoardRun = false
 		gui.SetCurrentView(boardMarkingPeriodsView)
+	}
+	return nil
+}
+
+func boardSessionInfoWidget(gui *gocui.Gui, maxX, maxY int) error {
+	if v, err := gui.SetView(boardSessionInfoView, 1, 1, maxX/7, maxY/8); err != nil {
+		if err != gocui.ErrUnknownView {
+			return nil
+		}
+		v.Title = "Session Info"
+
+		// we print the Session Info
+		id := studentInfo.PermID
+		name := studentInfo.FormattedName
+		grade := studentInfo.Grade
+		homeroom := studentInfo.HomeRoom
+		school := studentInfo.CurrentSchool
+		fmt.Fprintln(v, "\u001b[31;1mName: \u001b[34m"+name)
+		fmt.Fprintln(v, "\u001b[31;1mID: \u001b[34m"+strconv.Itoa(id))
+		fmt.Fprintln(v, "\u001b[31;1mGRADE: \u001b[34m"+strconv.Itoa(int(grade)))
+		fmt.Fprintln(v, "\u001b[31;1mHome Room: \u001b[34m"+homeroom)
+		fmt.Fprintln(v, "\u001b[31;1mSCHOOL: \u001b[34m"+school+"\u001b[32m")
 	}
 	return nil
 }

@@ -82,6 +82,7 @@ func loginLayout(g *gocui.Gui) error {
 		}
 		v.Title = "Password"
 		v.Editable = true
+		v.Mask = '*'
 	}
 	return nil
 }
