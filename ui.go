@@ -16,9 +16,10 @@ func startGUI(g *gocui.Gui) {
 	g.SetManagerFunc(layout)
 	g.Highlight = true
 	g.SelBgColor = gocui.ColorDefault
-	g.SelFgColor = gocui.ColorYellow
-	g.BgColor = gocui.ColorBlack
 	g.FgColor = gocui.ColorCyan
+
+	g.Mouse = true
+	g.Cursor = true
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
 	}

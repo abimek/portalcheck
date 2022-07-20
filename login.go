@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/jroimartin/gocui"
 )
@@ -21,9 +22,18 @@ const (
 	loginPasswordView      = "login_password"
 )
 
-var loginViews = []string{loginOutlineView, loginPortalAddressView, loginIDView, loginPasswordView}
+var (
+	loginViews       = []string{loginOutlineView, loginPortalAddressView, loginIDView, loginPasswordView}
+	interactiveViews = map[string]string{
+		loginPortalAddressView: loginIDView,
+		loginIDView:            loginPasswordView,
+	}
+)
 
 func loginLayout(g *gocui.Gui) error {
+	if err := loginKeybindings(g); err != nil {
+		return err
+	}
 	// return if we've already logged in so the login View doesn't show up
 	if userSession.LoggedIn {
 		return nil
@@ -43,12 +53,6 @@ func loginLayout(g *gocui.Gui) error {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
-		if err := g.SetKeybinding(loginPortalAddressView, gocui.KeyArrowDown, gocui.ModNone, keyDownLogin); err != nil {
-			return err
-		}
-		if err := g.SetKeybinding(loginPortalAddressView, gocui.KeyEnter, gocui.ModNone, keyEnterLogin); err != nil {
-			return err
-		}
 		v.Title = "Portal Address"
 		v.Editable = true
 	}
@@ -57,24 +61,12 @@ func loginLayout(g *gocui.Gui) error {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
-		if err := g.SetKeybinding(loginIDView, gocui.KeyArrowDown, gocui.ModNone, keyDownLogin); err != nil {
-			return err
-		}
-		if err := g.SetKeybinding(loginIDView, gocui.KeyArrowUp, gocui.ModNone, keyUpLogin); err != nil {
-			return err
-		}
-		if err := g.SetKeybinding(loginIDView, gocui.KeyEnter, gocui.ModNone, keyEnterLogin); err != nil {
-			return err
-		}
 		v.Editable = true
 		v.Title = "Student ID"
 	}
 
 	if v, err := g.SetView(loginPasswordView, maxX/3+2, maxY/3+15, maxX-maxX/3-2, maxY/3+18); err != nil {
 		if err != gocui.ErrUnknownView {
-			return err
-		}
-		if err := g.SetKeybinding(loginPasswordView, gocui.KeyArrowUp, gocui.ModNone, keyUpLogin); err != nil {
 			return err
 		}
 		if err := g.SetKeybinding(loginPasswordView, gocui.KeyEnter, gocui.ModNone, keyEnterLogin); err != nil {
@@ -87,48 +79,39 @@ func loginLayout(g *gocui.Gui) error {
 	return nil
 }
 
-// bidngs for whem someone goes down in the login menu
-var loginDownBindings = map[string]string{
-	loginPortalAddressView: loginIDView,
-	loginIDView:            loginPasswordView,
-}
-
-func keyDownLogin(gui *gocui.Gui, view *gocui.View) error {
-	for k, v := range loginDownBindings {
-		if view.Name() == k {
-			gui.SetCurrentView(v)
-			return nil
-		}
+func loginKeybindings(gui *gocui.Gui) error {
+	if err := gui.SetKeybinding("", gocui.MouseLeft, gocui.ModNone, onClickLoginView); err != nil {
+		return err
 	}
 	return nil
 }
 
-// Bindings for when someone goes up in the Login Menu
-var loginUpBindings = map[string]string{
-	loginPasswordView: loginIDView,
-	loginIDView:       loginPortalAddressView,
-}
-
-// GO DOWN THE LOGIN MENU WITH ARROW KEYS
-func keyUpLogin(gui *gocui.Gui, view *gocui.View) error {
-	for k, v := range loginUpBindings {
-		if view.Name() == k {
-			gui.SetCurrentView(v)
-			return nil
-		}
+func onClickLoginView(gui *gocui.Gui, view *gocui.View) error {
+	if _, err := gui.SetCurrentView(view.Name()); err != nil {
+		return err
 	}
+	go func(g *gocui.Gui, viewName string) {
+		time.Sleep(time.Duration(time.Millisecond * 100))
+		g.Update(func(gui *gocui.Gui) error {
+			if v, err := gui.View(viewName); err != nil {
+				return nil
+			} else {
+				val := len(v.Buffer()) - 1
+				if val == -1 {
+					val = 0
+				}
+				gui.CurrentView().SetCursor(val, 0)
+			}
+			currentStatus = nil
+			return nil
+		})
+	}(gui, view.Name())
 	return nil
-}
-
-// bindings for when someone clicks enter in a menu
-var loginEnterBindings = map[string]string{
-	loginPortalAddressView: loginIDView,
-	loginIDView:            loginPasswordView,
 }
 
 // When They want to login
 func keyEnterLogin(gui *gocui.Gui, view *gocui.View) error {
-	for v, k := range loginEnterBindings {
+	for v, k := range interactiveViews {
 		if view.Name() == v {
 			if view.Buffer() != "" {
 				gui.SetCurrentView(k)
@@ -164,6 +147,7 @@ func keyEnterLogin(gui *gocui.Gui, view *gocui.View) error {
 			createStatus(statusInfo{"You're ID is not a number", 4, gui})
 			return nil
 		}
+		userSession.LoggedIn = true
 		login(loginInfo{portal: logininfo[0], id: id, password: logininfo[2]}, gui)
 	}
 	return nil

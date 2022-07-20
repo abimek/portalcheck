@@ -19,29 +19,9 @@ func boardLayout(gui *gocui.Gui) error {
 	}
 	maxX, maxY := gui.Size()
 
-	boardSessionInfoWidget(gui, maxX, maxY)
-	if v, err := gui.SetView(boardMarkingPeriodsView, 1, maxY/8+1, maxX/7, maxY/4); err != nil {
-		if err != gocui.ErrUnknownView {
-			return nil
-		}
-		v.Title = "Marking Periods"
-		markingPeriods := []string{"MP1", "MP2", "MP3", "MP4"}
-
-		for _, mp := range markingPeriods {
-			fmt.Fprintln(v, "\u001b[32m"+mp)
-		}
-	}
-	if v, err := gui.SetView(boardClassListView, 1, maxY/4+1, maxX/7, maxY/2); err != nil {
-		if err != gocui.ErrUnknownView {
-			return nil
-		}
-		v.Title = "Classes"
-
-		gradebook := markingPeriodGrades[userSession.currentMarkingPeriod]
-		for _, course := range gradebook.Courses {
-			fmt.Fprintln(v, "\u001b[32m"+course.Title)
-		}
-	}
+	drawBoardSessionInfoView(gui, maxX, maxY)
+	drawBoardMarkingPeriodsView(gui, maxX, maxY)
+	drawBoardClassListView(gui, maxX, maxY)
 	if firstBoardRun {
 		firstBoardRun = false
 		gui.SetCurrentView(boardMarkingPeriodsView)
@@ -49,7 +29,8 @@ func boardLayout(gui *gocui.Gui) error {
 	return nil
 }
 
-func boardSessionInfoWidget(gui *gocui.Gui, maxX, maxY int) error {
+// This method draws the current board session info onto the UI
+func drawBoardSessionInfoView(gui *gocui.Gui, maxX, maxY int) error {
 	if v, err := gui.SetView(boardSessionInfoView, 1, 1, maxX/7, maxY/8); err != nil {
 		if err != gocui.ErrUnknownView {
 			return nil
@@ -67,6 +48,36 @@ func boardSessionInfoWidget(gui *gocui.Gui, maxX, maxY int) error {
 		fmt.Fprintln(v, "\u001b[31;1mGRADE: \u001b[34m"+strconv.Itoa(int(grade)))
 		fmt.Fprintln(v, "\u001b[31;1mHome Room: \u001b[34m"+homeroom)
 		fmt.Fprintln(v, "\u001b[31;1mSCHOOL: \u001b[34m"+school+"\u001b[32m")
+	}
+	return nil
+}
+
+func drawBoardMarkingPeriodsView(gui *gocui.Gui, maxX, maxY int) error {
+	if v, err := gui.SetView(boardMarkingPeriodsView, 1, maxY/8+1, maxX/7, maxY/4); err != nil {
+		if err != gocui.ErrUnknownView {
+			return nil
+		}
+		v.Title = "Marking Periods"
+		markingPeriods := []string{"MP1", "MP2", "MP3", "MP4"}
+
+		for _, mp := range markingPeriods {
+			fmt.Fprintln(v, "\u001b[32m"+mp)
+		}
+	}
+	return nil
+}
+
+func drawBoardClassListView(gui *gocui.Gui, maxX, maxY int) error {
+	if v, err := gui.SetView(boardClassListView, 1, maxY/4+1, maxX/7, maxY/2); err != nil {
+		if err != gocui.ErrUnknownView {
+			return nil
+		}
+		v.Title = "Classes"
+
+		gradebook := markingPeriodGrades[userSession.currentMarkingPeriod]
+		for _, course := range gradebook.Courses {
+			fmt.Fprintln(v, "\u001b[32m"+course.Title)
+		}
 	}
 	return nil
 }
